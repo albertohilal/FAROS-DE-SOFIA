@@ -4,6 +4,13 @@ let deviceInfo = {};
 let images = {}; // Para almacenar las imágenes
 let debugCollisions = false; // Variable para mostrar áreas de colisión
 
+// Variables para el sistema de diálogo
+let currentMessage = null;
+let messageTimer = 0;
+let messageDuration = 3000; // 3 segundos
+let lastCollisionTime = 0;
+let collisionCooldown = 1000; // 1 segundo de cooldown entre colisiones
+
 // Variables para movimiento continuo
 let movementState = {
   up: false,
@@ -99,6 +106,16 @@ function draw() {
   // Mostrar áreas de colisión si el debug está activado
   if (debugCollisions) {
     drawCollisionAreas();
+  }
+  
+  // Mostrar diálogo si hay un mensaje activo
+  if (currentMessage) {
+    drawDialogue();
+    
+    // Reducir el timer del mensaje
+    if (millis() - messageTimer > messageDuration) {
+      currentMessage = null;
+    }
   }
   
   // Manejar movimiento continuo
@@ -277,11 +294,29 @@ class Sofia {
       // Verificar colisión con el faro o su avatar
       if (this.rectanglesCollide(sofiaRect, faroRect) || 
           this.rectanglesCollide(sofiaRect, avatarRect)) {
+        
+        // ¡COLISIÓN DETECTADA! Mostrar mensaje si no está en cooldown
+        if (millis() - lastCollisionTime > collisionCooldown) {
+          this.showMessage(faro);
+          lastCollisionTime = millis();
+        }
+        
         return false; // No puede moverse, hay colisión
       }
     }
     
     return true; // Puede moverse sin problemas
+  }
+  
+  // Función para mostrar el mensaje del faro
+  showMessage(faro) {
+    currentMessage = {
+      text: faro.mensajeSecreto(),
+      character: faro.nombre,
+      x: faro.x + 15, // Posición del mensaje cerca del faro
+      y: faro.y - 20
+    };
+    messageTimer = millis();
   }
   
   // Función auxiliar para detectar colisión entre rectángulos
@@ -527,6 +562,92 @@ class Faro {
       "Tío": "Tus preguntas no tienen por qué tener respuesta"
     }[this.nombre];
   }
+}
+
+// Función para dibujar el globo de diálogo
+function drawDialogue() {
+  if (!currentMessage) return;
+  
+  push();
+  
+  // Configurar texto para calcular dimensiones
+  textSize(ResponsiveUtils.getTextSize('sm'));
+  textAlign(LEFT, TOP);
+  
+  let message = currentMessage.text;
+  let maxWidth = width * 0.6; // 60% del ancho de la pantalla
+  let padding = 20;
+  let lineHeight = 20;
+  
+  // Dividir texto en líneas para que quepa en el ancho máximo
+  let words = message.split(' ');
+  let lines = [];
+  let currentLine = '';
+  
+  for (let word of words) {
+    let testLine = currentLine + (currentLine ? ' ' : '') + word;
+    if (textWidth(testLine) <= maxWidth - padding * 2) {
+      currentLine = testLine;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  
+  // Calcular dimensiones del globo
+  let bubbleWidth = maxWidth;
+  let bubbleHeight = lines.length * lineHeight + padding * 2;
+  
+  // Posicionar el globo cerca del personaje pero visible en pantalla
+  let bubbleX = constrain(currentMessage.x - bubbleWidth/2, 20, width - bubbleWidth - 20);
+  let bubbleY = constrain(currentMessage.y - bubbleHeight - 30, 20, height - bubbleHeight - 20);
+  
+  // Dibujar sombra del globo
+  fill(0, 0, 0, 100);
+  rect(bubbleX + 3, bubbleY + 3, bubbleWidth, bubbleHeight, 15);
+  
+  // Dibujar fondo del globo
+  fill(255, 255, 240, 250);
+  stroke(100, 100, 100);
+  strokeWeight(2);
+  rect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 15);
+  
+  // Dibujar "cola" del globo (triángulo apuntando al personaje)
+  let triangleX = constrain(currentMessage.x, bubbleX + 30, bubbleX + bubbleWidth - 30);
+  let triangleY = bubbleY + bubbleHeight;
+  
+  fill(255, 255, 240, 250);
+  stroke(100, 100, 100);
+  triangle(triangleX, triangleY,
+           triangleX - 10, triangleY + 15,
+           triangleX + 10, triangleY + 15);
+  
+  // Dibujar nombre del personaje
+  fill(150, 100, 50);
+  noStroke();
+  textAlign(LEFT, TOP);
+  textSize(ResponsiveUtils.getTextSize('xs'));
+  text(currentMessage.character + ":", bubbleX + padding, bubbleY + padding/2);
+  
+  // Dibujar texto del mensaje
+  fill(50, 50, 50);
+  textSize(ResponsiveUtils.getTextSize('sm'));
+  
+  for (let i = 0; i < lines.length; i++) {
+    text(lines[i], bubbleX + padding, bubbleY + padding + (i + 0.5) * lineHeight);
+  }
+  
+  // Agregar efecto de desvanecimiento cuando está por desaparecer
+  let timeLeft = messageDuration - (millis() - messageTimer);
+  if (timeLeft < 500) { // Último medio segundo
+    let alpha = map(timeLeft, 0, 500, 0, 255);
+    fill(220, alpha);
+    noStroke();
+    rect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 15);
+  }
+  
+  pop();
 }
 
 // Función para dibujar las áreas de colisión (debug)
