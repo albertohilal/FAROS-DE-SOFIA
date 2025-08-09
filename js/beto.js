@@ -62,9 +62,6 @@ function setup() {
   faros.push(new Faro(width - spacing * 3 - 30, spacing * 2, color(100, 255, 100), "Papá", images.papa, images.faroVerde)); // Verde  
   faros.push(new Faro(width / 2 - 15, height - spacing * 6 - imageSize, color(255, 255, 0), "Tío", images.tio, images.faroAmarillo)); // Amarillo
   
-  // Configurar controles
-  setupControls();
-  
   // Ocultar pantalla de carga
   setTimeout(() => {
     let loadingScreen = document.getElementById('loading-screen');
@@ -571,41 +568,6 @@ function drawCollisionAreas() {
   pop();
 }
 
-// Función para configurar controles UI
-function setupControls() {
-  // Botón de pantalla completa
-  document.getElementById('fullscreen-btn').addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
-  });
-  
-  // Botón de pausa
-  let isPaused = false;
-  document.getElementById('pause-btn').addEventListener('click', () => {
-    isPaused = !isPaused;
-    if (isPaused) {
-      noLoop();
-      document.getElementById('pause-btn').innerHTML = '▶';
-    } else {
-      loop();
-      document.getElementById('pause-btn').innerHTML = '⏸';
-    }
-  });
-  
-  // Botón de reset
-  document.getElementById('reset-btn').addEventListener('click', () => {
-    setup();
-    if (isPaused) {
-      isPaused = false;
-      loop();
-      document.getElementById('pause-btn').innerHTML = '⏸';
-    }
-  });
-}
-
 // Función para redimensionar ventana
 function windowResized() {
   let w = windowWidth;
@@ -644,11 +606,25 @@ function windowResized() {
 // Eventos de teclado
 function keyPressed() {
   if (key === 'f' || key === 'F') {
-    document.getElementById('fullscreen-btn').click();
+    // Pantalla completa
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
   } else if (key === ' ') {
-    document.getElementById('pause-btn').click();
+    // Pausa/reanuda
+    if (isLooping()) {
+      noLoop();
+    } else {
+      loop();
+    }
   } else if (key === 'r' || key === 'R') {
-    document.getElementById('reset-btn').click();
+    // Reset
+    setup();
+    if (!isLooping()) {
+      loop();
+    }
   } else if (key === 'd' || key === 'D') {
     // Activar/desactivar debug de colisiones
     debugCollisions = !debugCollisions;
