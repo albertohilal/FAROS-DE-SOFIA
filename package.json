@@ -1,0 +1,28 @@
+{
+  "name": "faros-de-sofia",
+  "version": "1.0.0",
+  "description": "Proyecto p5.js optimizado para móvil y escritorio",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "serve": "python -m http.server 8000",
+    "build": "echo 'No build step required for p5.js project'",
+    "deploy": "echo 'Ready for deployment - upload all files to web server'"
+  },
+  "keywords": [
+    "p5js",
+    "javascript",
+    "interactive",
+    "mobile",
+    "responsive",
+    "canvas",
+    "creative-coding"
+  ],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

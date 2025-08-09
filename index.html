@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+    <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes"> <!-- Opcional para iOS antiguo -->
+    <meta name="theme-color" content="#000000">
+    
+    <title>Faros de Sofia - p5.js</title>
+    
+    <!-- p5.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+</head>
+<body>
+    <!-- Loading screen -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <p>Cargando...</p>
+    </div>
+    
+    <!-- Main container -->
+    <div id="app-container">
+        <!-- p5.js canvas will be inserted here -->
+    </div>
+    
+    <!-- UI Controls -->
+    <div id="ui-controls">
+        <button id="fullscreen-btn" class="control-btn">⛶</button>
+        <button id="pause-btn" class="control-btn">⏸</button>
+        <button id="reset-btn" class="control-btn">⟲</button>
+    </div>
+    
+    <!-- Mobile-specific controls -->
+    <div id="mobile-controls" class="mobile-only">
+        <div class="joystick" id="joystick">
+            <div class="joystick-inner"></div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="js/utils/deviceDetection.js"></script>
+    <script src="js/utils/responsiveUtils.js"></script>
+    <script src="js/beto.js"></script>
+</body>
+</html>
