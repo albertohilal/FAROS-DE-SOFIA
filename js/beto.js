@@ -11,6 +11,13 @@ let messageDuration = 3000; // 3 segundos
 let lastCollisionTime = 0;
 let collisionCooldown = 1000; // 1 segundo de cooldown entre colisiones
 
+// Variables para la pantalla de presentación
+let showIntro = true;
+let introStartTime = 0;
+let introDuration = 6000; // 6 segundos total de intro
+let hearts = []; // Array para los corazones
+let sofiaScale = 0; // Escala de la imagen de Sofía (0 a 1.5)
+
 // Variables para movimiento continuo
 let movementState = {
   up: false,
@@ -49,6 +56,10 @@ function setup() {
   let canvas = createCanvas(w, h);
   canvas.parent('app-container');
   
+  // Inicializar pantalla de presentación
+  introStartTime = millis();
+  initializeHearts();
+  
   sofia = new Sofia(width / 2, height / 2, images.sofia, images.barquito);
   
   // Debug: verificar que las imágenes se cargaron
@@ -80,6 +91,25 @@ function setup() {
 }
 
 function draw() {
+  // Si estamos en la pantalla de presentación
+  if (showIntro) {
+    drawIntroScreen();
+    
+    // Verificar si la intro ha terminado
+    if (millis() - introStartTime > introDuration) {
+      showIntro = false;
+      // Ocultar pantalla de carga HTML si aún está visible
+      setTimeout(() => {
+        let loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          loadingScreen.classList.add('hidden');
+          setTimeout(() => loadingScreen.style.display = 'none', 500);
+        }
+      }, 100);
+    }
+    return;
+  }
+  
   background(220);
   
   // Niebla (dificultades familiares)
@@ -650,6 +680,166 @@ function drawDialogue() {
   pop();
 }
 
+// Funciones para la pantalla de presentación
+function initializeHearts() {
+  hearts = [];
+  // Crear corazones iniciales
+  for (let i = 0; i < 15; i++) {
+    hearts.push(createHeart());
+  }
+}
+
+function createHeart() {
+  return {
+    x: random(width),
+    y: random(-50, -10),
+    speed: random(1, 3),
+    size: random(15, 30),
+    color: color(random(200, 255), random(100, 200), random(150, 255), random(150, 255)),
+    rotation: random(TWO_PI),
+    rotationSpeed: random(-0.05, 0.05)
+  };
+}
+
+function drawIntroScreen() {
+  // Fondo degradado suave
+  for (let i = 0; i <= height; i++) {
+    let inter = map(i, 0, height, 0, 1);
+    let c = lerpColor(color(135, 206, 250), color(255, 182, 193), inter); // Azul cielo a rosa
+    stroke(c);
+    line(0, i, width, i);
+  }
+  
+  // Actualizar y dibujar corazones
+  updateHearts();
+  drawHearts();
+  
+  // Calcular progreso de la animación
+  let elapsed = millis() - introStartTime;
+  
+  // Fase 1: Aparición de Sofía (0-3 segundos)
+  if (elapsed < 3000) {
+    let progress = elapsed / 3000;
+    sofiaScale = easeInOutCubic(progress) * 1.5; // Crece hasta 150%
+    drawSofiaIntro();
+  }
+  // Fase 2: Sofía completa + título apareciendo (3-6 segundos)
+  else if (elapsed < 6000) {
+    sofiaScale = 1.5; // Mantener al 150%
+    drawSofiaIntro();
+    
+    let titleProgress = (elapsed - 3000) / 3000;
+    drawTitle(easeInOutCubic(titleProgress));
+  }
+  
+  // Añadir más corazones ocasionalmente
+  if (frameCount % 30 === 0) {
+    hearts.push(createHeart());
+  }
+  
+  // Limitar número de corazones
+  if (hearts.length > 25) {
+    hearts.splice(0, hearts.length - 25);
+  }
+}
+
+function updateHearts() {
+  for (let i = hearts.length - 1; i >= 0; i--) {
+    let heart = hearts[i];
+    heart.y += heart.speed;
+    heart.x += sin(heart.y * 0.01) * 0.5; // Movimiento suave lateral
+    heart.rotation += heart.rotationSpeed;
+    
+    // Eliminar corazones que salen de pantalla
+    if (heart.y > height + 50) {
+      hearts.splice(i, 1);
+    }
+  }
+}
+
+function drawHearts() {
+  for (let heart of hearts) {
+    push();
+    translate(heart.x, heart.y);
+    rotate(heart.rotation);
+    
+    fill(heart.color);
+    noStroke();
+    
+    // Dibujar corazón usando formas básicas
+    let s = heart.size;
+    ellipse(-s * 0.25, -s * 0.25, s * 0.5, s * 0.5);
+    ellipse(s * 0.25, -s * 0.25, s * 0.5, s * 0.5);
+    triangle(-s * 0.5, -s * 0.1, s * 0.5, -s * 0.1, 0, s * 0.5);
+    
+    pop();
+  }
+}
+
+function drawSofiaIntro() {
+  if (!images.sofia) return;
+  
+  push();
+  
+  let imgSize = 200 * sofiaScale;
+  let imgX = width / 2 - imgSize / 2;
+  let imgY = height / 2 - imgSize / 2;
+  
+  // Sombra suave
+  fill(0, 0, 0, 50);
+  ellipse(width / 2 + 5, height / 2 + imgSize / 2 + 5, imgSize * 0.8, imgSize * 0.2);
+  
+  // Imagen de Sofía con brillo
+  tint(255, 255, 255, 255);
+  image(images.sofia, imgX, imgY, imgSize, imgSize);
+  
+  // Efecto de brillo
+  if (sofiaScale > 0.5) {
+    tint(255, 255, 255, 50);
+    image(images.sofia, imgX - 5, imgY - 5, imgSize + 10, imgSize + 10);
+  }
+  
+  noTint();
+  pop();
+}
+
+function drawTitle(alpha) {
+  push();
+  
+  let titleY = height / 2 + 150;
+  
+  // Sombra del texto
+  fill(0, 0, 0, alpha * 100);
+  textAlign(CENTER, CENTER);
+  textSize(ResponsiveUtils.getTextSize('xl') * 1.5);
+  text("El Viaje Mágico de Sofía", width / 2 + 3, titleY + 3);
+  
+  // Texto principal con gradiente simulado
+  fill(255, 215, 0, alpha * 255); // Dorado
+  text("El Viaje Mágico de Sofía", width / 2, titleY);
+  
+  // Efecto de brillo en el texto
+  if (alpha > 0.7) {
+    fill(255, 255, 255, (alpha - 0.7) * 3 * 100);
+    textSize(ResponsiveUtils.getTextSize('xl') * 1.6);
+    text("El Viaje Mágico de Sofía", width / 2, titleY);
+  }
+  
+  // Subtítulo
+  if (alpha > 0.5) {
+    fill(100, 100, 150, (alpha - 0.5) * 2 * 255);
+    textSize(ResponsiveUtils.getTextSize('sm'));
+    text("Toca para comenzar", width / 2, titleY + 50);
+  }
+  
+  pop();
+}
+
+// Función de easing para animaciones suaves
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+}
+
 // Función para dibujar las áreas de colisión (debug)
 function drawCollisionAreas() {
   push();
@@ -726,6 +916,12 @@ function windowResized() {
 
 // Eventos de teclado
 function keyPressed() {
+  // Si estamos en la intro, cualquier tecla la salta
+  if (showIntro) {
+    showIntro = false;
+    return;
+  }
+  
   if (key === 'f' || key === 'F') {
     // Pantalla completa
     if (!document.fullscreenElement) {
@@ -785,6 +981,12 @@ function keyReleased() {
 
 // Eventos touch para móviles
 function touchStarted() {
+  // Si estamos en la intro, cualquier toque la salta
+  if (showIntro) {
+    showIntro = false;
+    return false;
+  }
+  
   if (sofia && touches.length > 0) {
     let touch = touches[0];
     let action = sofia.checkJoystickClick(touch.x, touch.y);
@@ -824,6 +1026,12 @@ function touchEnded() {
 
 // Controles de mouse para el joystick
 function mousePressed() {
+  // Si estamos en la intro, cualquier clic la salta
+  if (showIntro) {
+    showIntro = false;
+    return false;
+  }
+  
   if (sofia) {
     let action = sofia.checkJoystickClick(mouseX, mouseY);
     if (action) {
