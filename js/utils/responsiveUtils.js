@@ -35,10 +35,10 @@ class ResponsiveUtils {
         const breakpoint = this.getBreakpoint();
         const scales = {
             xs: 0.7,
-            sm: 0.8,
-            md: 0.9,
-            lg: 1.0,
-            xl: 1.1
+            sm: 1.2,
+            md: 1.4,
+            lg: 1.6,
+            xl: 1.7
         };
         
         return baseValue * scales[breakpoint] * scaleFactor;
