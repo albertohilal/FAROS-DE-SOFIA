@@ -186,6 +186,10 @@ class Sofia {
       let barquitoX = this.x - this.barquitoSize/2; // Centrado horizontalmente con Sofía
       let barquitoY = imgY - this.barquitoSize - 5; // Misma distancia que entre faro y avatar
       image(this.barquito, barquitoX, barquitoY, this.barquitoSize, this.barquitoSize * 0.8);
+    } else {
+      // Fallback: dibujar barquito simple si no se carga el SVG
+      this.drawBarquitoFallback();
+    }
     
     // Marco alrededor del área de imagen
     noFill();
@@ -214,6 +218,37 @@ class Sofia {
     textAlign(CENTER, CENTER);
     textSize(12);
     text("SOFÍA", x + this.imageSize/2, y + this.imageSize/2);
+  }
+  
+  // Función para dibujar barquito simple si el SVG no carga
+  drawBarquitoFallback() {
+    push();
+    let imgX = this.x - this.imageSize/2;
+    let imgY = this.y - this.imageSize/2;
+    let barquitoX = this.x - this.barquitoSize/2;
+    let barquitoY = imgY - this.barquitoSize - 5; // Misma distancia que entre faro y avatar
+    let size = this.barquitoSize;
+    
+    // Casco del barco
+    fill(255);
+    stroke(0);
+    strokeWeight(2);
+    arc(barquitoX + size/2, barquitoY + size*0.7, size*0.8, size*0.3, 0, PI);
+    
+    // Mástil
+    line(barquitoX + size/2, barquitoY + size*0.2, barquitoX + size/2, barquitoY + size*0.7);
+    
+    // Vela
+    fill(255);
+    triangle(barquitoX + size/2, barquitoY + size*0.2, 
+             barquitoX + size*0.8, barquitoY + size*0.4,
+             barquitoX + size/2, barquitoY + size*0.6);
+    
+    // Bandera
+    fill(255, 0, 0);
+    rect(barquitoX + size/2, barquitoY + size*0.2, size*0.15, size*0.1);
+    
+    pop();
   }
   
   // Métodos para mover a Sofía
